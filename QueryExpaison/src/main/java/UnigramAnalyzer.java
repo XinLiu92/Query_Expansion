@@ -4,6 +4,7 @@ import org.apache.lucene.analysis.*;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -22,17 +23,17 @@ public class UnigramAnalyzer extends Analyzer {
     }
 
     public static CharArraySet getCustomStopWordSet(){
-        String stopWordDir = "/home/xl1044/ds/Query_Expansion/QueryExpaison/src/main/java/stop_word.cfg";
+        String stopWordDir = "./stop_word.cfg";
 
         List<String> list = new ArrayList<>();
 
         String line = "";
 
         try{
-            InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(stopWordDir);
+            //InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(stopWordDir);
 
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-
+            //BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(stopWordDir));
 
             while ((line = bufferedReader.readLine()) != null){
                 if (!line.isEmpty()){
