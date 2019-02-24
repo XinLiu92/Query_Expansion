@@ -1,7 +1,9 @@
 package main.java;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -9,16 +11,12 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.analysis.en.EnglishAnalyzer;
 
-
+import javax.print.Doc;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class QueryExpansion {
 
@@ -33,7 +31,7 @@ public class QueryExpansion {
     public QueryExpansion(Map<String, String> pageMap, String indexPath){
         this.pageMap = pageMap;
         this.INDEX_DIR = indexPath;
-        this.max_result = 100;
+        this.max_result = 10;
 
     }
 
@@ -55,30 +53,62 @@ public class QueryExpansion {
             TopDocs tops = searcher.search(q, max_result);
             ScoreDoc[] scoreDoc = tops.scoreDocs;
 
-            Query newQuery = expandQueryByRocchio(queryStr,scoreDoc);
+            //Query newQuery = expandQueryByRocchio(queryStr,scoreDoc);
+            List<String> expandQueryList = expandQueryByRocchio(5,scoreDoc);
+//            tops = searcher.search(newQuery,max_result);
+//
+//
+//            scoreDoc = tops.scoreDocs;
+//            for (int i = 0; i < scoreDoc.length; i++) {
+//                ScoreDoc score = scoreDoc[i];
+//                Document doc = searcher.doc(score.doc);
+//                String paraId = doc.getField("paraid").stringValue();
+//                float rankScore = score.score;
+//                int rank = i + 1;
+//
+//                // String runStr = "enwiki:" + queryStr.replace(" ", "%20") + " Q0 " + paraId + " " + rank + " "+ rankScore + " BM25";
+//
+//                String runStr = queryId+" Q0 "+paraId+" "+rank+ " "+rankScore+" "+"team3"+" QueryExpansion";
+//                System.out.println(runStr);
+//                runFileStr.add(runStr);
+//            }
 
-            tops = searcher.search(newQuery,max_result);
 
 
-            scoreDoc = tops.scoreDocs;
-            for (int i = 0; i < scoreDoc.length; i++) {
-                ScoreDoc score = scoreDoc[i];
+            Query q_rm = generateWeightedQuery(queryStr,expandQueryList);
+
+             tops = searcher.search(q_rm, max_result);
+             ScoreDoc[] newScoreDoc = tops.scoreDocs;
+
+            for (int i = 0; i < newScoreDoc.length;i++ ){
+                ScoreDoc score = newScoreDoc[i];
                 Document doc = searcher.doc(score.doc);
+
                 String paraId = doc.getField("paraid").stringValue();
                 float rankScore = score.score;
-                int rank = i + 1;
-
-                // String runStr = "enwiki:" + queryStr.replace(" ", "%20") + " Q0 " + paraId + " " + rank + " "+ rankScore + " BM25";
-
+                int rank = i+1;
                 String runStr = queryId+" Q0 "+paraId+" "+rank+ " "+rankScore+" "+"team3"+" QueryExpansion";
-                System.out.println(runStr);
-                runFileStr.add(runStr);
+
+                if (!runFileStr.contains(runStr)){
+                    runFileStr.add(runStr);
+                }
             }
 
         }
 
         writeToFile("page-QueryExpansion.run",runFileStr);
 
+    }
+
+    private Query generateWeightedQuery(String initialQ, List<String> rm_list) throws ParseException {
+        if (!rm_list.isEmpty()) {
+            String rm_str = String.join(" ", rm_list);
+            Query q = parser.parse(QueryParser.escape(initialQ) + "^0.6" + QueryParser.escape(rm_str) + "^0.4");
+            return q;
+        } else {
+            Query q = parser.parse(QueryParser.escape(initialQ));
+            return q;
+        }
     }
 
     private static void writeToFile(String filename, ArrayList<String> runfileStrings) {
@@ -94,6 +124,112 @@ public class QueryExpansion {
 
         System.out.println("wrote file to "+ OUTPUT_DIR);
     }
+
+    public List<String> expandQueryByRocchio(int top, ScoreDoc[] scoreDocs) throws IOException {
+        List<String> expandedList = new ArrayList<>();
+        Map<String,Float> term_map = new HashMap<>();
+
+
+        for (int i = 0; i < scoreDocs.length;i++){
+            ScoreDoc score = scoreDocs[i];
+            Document doc = searcher.doc(score.doc);
+            String paraID = doc.getField("paraid").toString();
+            String paraBody = doc.getField("content").toString();
+
+
+            float rankScore = score.score;
+
+            List<String> unigram_list = analyzeByUnigram(paraBody);
+
+            int rank = i+1;
+
+            float initial_p = (float) 1 / (rank + 1); // p always < 1
+
+            for (String termStr : getVocabularyList(unigram_list)){
+                int tf_w = countExactStrFreqInList(termStr, unigram_list);
+                int tf_list = unigram_list.size();
+                float term_score = initial_p * ((float) tf_w / tf_list);
+                if (term_map.keySet().contains(termStr)) {
+                    term_map.put(termStr, term_map.get(termStr) + term_score);
+
+                } else {
+                    term_map.put(termStr, term_score);
+                }
+            }
+
+
+
+        }
+        Set<String> termSet = getTopValuesInMap(term_map, 5).keySet();
+
+
+        expandedList.addAll(termSet);
+
+        return expandedList;
+    }
+
+
+    public static HashMap<String, Float> getTopValuesInMap(Map<String, Float> unsortMap, int k) {
+        List<Map.Entry<String, Float>> list = new LinkedList<Map.Entry<String, Float>>(unsortMap.entrySet());
+
+        Collections.sort(list, new Comparator<Map.Entry<String, Float>>() {
+
+            public int compare(Map.Entry<String, Float> o1, Map.Entry<String, Float> o2) {
+                return (o2.getValue()).compareTo(o1.getValue());
+            }
+        });
+
+        HashMap<String, Float> sortedMap = new LinkedHashMap<String, Float>();
+        int i = 0;
+        for (Map.Entry<String, Float> entry : list)
+
+        {
+            if (i < k || k == 0) {
+                sortedMap.put(entry.getKey(), entry.getValue());
+                i++;
+            } else {
+                break;
+            }
+        }
+
+        return sortedMap;
+    }
+
+
+    private static int countExactStrFreqInList(String term, List<String> list) {
+        int occurrences = Collections.frequency(list, term);
+        return occurrences;
+    }
+
+    private static List<String> getVocabularyList(List<String> unigramList) {
+        List<String> list = new ArrayList<String>();
+        Set<String> hs = new HashSet<>();
+
+        hs.addAll(unigramList);
+        list.addAll(hs);
+        return list;
+    }
+
+    private  List<String> analyzeByUnigram(String inputStr) throws IOException{
+        List<String> strList = new ArrayList<>();
+
+        Analyzer analyzer =  new UnigramAnalyzer();
+
+        TokenStream tokenizer = analyzer.tokenStream("content", inputStr);
+
+
+        CharTermAttribute charTermAttribute = tokenizer.addAttribute(CharTermAttribute.class);
+        tokenizer.reset();
+        while (tokenizer.incrementToken()) {
+            String token = charTermAttribute.toString();
+            strList.add(token);
+        }
+        tokenizer.end();
+        tokenizer.close();
+
+        return strList;
+    }
+
 
     public Query expandQueryByRocchio(String queryString, ScoreDoc[] scoreDoc) throws IOException, ParseException {
         List<Document> vhits = getDocs(queryString,scoreDoc);
