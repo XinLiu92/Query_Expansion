@@ -297,7 +297,7 @@ public class QueryExpansion {
             if (docString.length == 0) continue;
 
             for(int j = 0; j < docString.length;j++){
-                stringbuffer.append(docString[i]+" ");
+                stringbuffer.append(docString[j]+" ");
             }
 
 
