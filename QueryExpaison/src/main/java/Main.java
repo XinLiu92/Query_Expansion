@@ -9,6 +9,7 @@ public class Main {
 
     private static String INDEX_DIRECTORY;
     public static void main(String[] args) throws IOException, ParseException {
+        System.setProperty("file.encoding", "UTF-8");
         System.out.println("Start running Main");
         String queryPath = args[1];
         String indexPath = args[0];

@@ -3,6 +3,7 @@ package main.java;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
@@ -12,7 +13,6 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.store.FSDirectory;
 
-import javax.print.Doc;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -44,7 +44,8 @@ public class QueryExpansion {
 
         searcher.setSimilarity(new BM25Similarity());
 
-        parser = new QueryParser("content", new EnglishAnalyzer());
+//        parser = new QueryParser("content", new EnglishAnalyzer());
+        parser = new QueryParser("content", new StandardAnalyzer());
         ArrayList<String> runFileStr = new ArrayList<String>();
         for (Map.Entry<String, String> entry:pageMap.entrySet()){
             String queryStr = entry.getValue();
