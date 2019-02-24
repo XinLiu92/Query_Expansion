@@ -23,7 +23,7 @@ public class UnigramAnalyzer extends Analyzer {
     }
 
     public static CharArraySet getCustomStopWordSet(){
-        String stopWordDir = "/File/stop_word.cfg";
+        String stopWordDir = "/home/xl1044/ds/Query_Expansion/QueryExpaison/File/stop_word.cfg";
 
         List<String> list = new ArrayList<>();
 
