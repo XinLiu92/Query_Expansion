@@ -12,7 +12,7 @@ public class Main {
 
         String queryPath = args[1];
         String indexPath = args[0];
-
+        System.out.println("index path: "+indexPath);
         //dataPath = args[2];
 
         QueryData queryData = new QueryData(queryPath);
@@ -20,7 +20,7 @@ public class Main {
         Map<String,String> pageMap = queryData.getAllPageQueries();
         Map<String,String> sectionMap = queryData.getAllSectionQueries();
 
-
+        System.out.println("calling query expansion");
         QueryExpansion qe = new QueryExpansion(pageMap,indexPath);
 
         qe.run();
