@@ -214,6 +214,9 @@ public class QueryExpansion {
                 if (res.containsKey(term)){
                     res.put(term,res.get(term)+1);
                 }
+                else {
+                    res.put(term,1);
+                }
             }
         }
 
