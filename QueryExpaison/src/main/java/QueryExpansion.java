@@ -286,7 +286,9 @@ public class QueryExpansion {
     public List<QueryTerms> getDocsTerms(List<Document> vhits, int docsRelevantCount, Analyzer analyzer) throws IOException {
         List<QueryTerms> res = new ArrayList<>();
 
-        for (int i = 0; i< docsRelevantCount && i < vhits.size(); i++) {
+
+        int min = Math.min(docsRelevantCount,vhits.size());
+        for (int i = 0; i< min; i++) {
             Document doc = vhits.get(i);
 
             StringBuffer stringbuffer = new StringBuffer();
