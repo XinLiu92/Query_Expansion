@@ -21,8 +21,8 @@ public class UnigramAnalyzer extends Analyzer {
         return new TokenStreamComponents(source, filter2);
     }
 
-    public CharArraySet getCustomStopWordSet(){
-        String stopWordDir = "stop_word.cfg";
+    public static CharArraySet getCustomStopWordSet(){
+        String stopWordDir = "/home/xl1044/ds/Query_Expansion/QueryExpaison/src/main/java/stop_word.cfg";
 
         List<String> list = new ArrayList<>();
 
