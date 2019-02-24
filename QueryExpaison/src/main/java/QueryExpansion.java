@@ -40,6 +40,8 @@ public class QueryExpansion {
 
 
     public void run() throws IOException, ParseException {
+
+        System.out.println(INDEX_DIR);
         searcher = new IndexSearcher(DirectoryReader.open(FSDirectory.open((new File(INDEX_DIR).toPath()))));
 
         searcher.setSimilarity(new BM25Similarity());

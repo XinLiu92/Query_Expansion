@@ -10,11 +10,9 @@ public class Main {
     private static String INDEX_DIRECTORY;
     public static void main(String[] args) throws IOException, ParseException {
 
-        String queryPath = "";
-        String indexPath = "";
+        String queryPath = args[1];
+        String indexPath = args[0];
 
-        INDEX_DIRECTORY = args[0];
-        queryPath = args[1];
         //dataPath = args[2];
 
         QueryData queryData = new QueryData(queryPath);
