@@ -117,10 +117,11 @@ public class QueryExpansion {
 
 
         //set boost for relevent docuement
+        System.out.println("set boost for relevent docuement");
         Map<String,Float> docsTerms = setBoost(docsTermVector, beta, decay);
 
         //set boost for query string
-
+        System.out.println("set boost for query string");
         QueryTerms originalQueryTerm = new QueryTerms(queryString,new EnglishAnalyzer(),1);
 
         Map<String,Float> originalQuery = setBoost(originalQueryTerm,alpha);
