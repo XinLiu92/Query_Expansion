@@ -1,6 +1,7 @@
 package main.java;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -13,9 +14,7 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.store.FSDirectory;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 public class QueryExpansion {
@@ -44,8 +43,8 @@ public class QueryExpansion {
 
         searcher.setSimilarity(new BM25Similarity());
 
-//        parser = new QueryParser("content", new EnglishAnalyzer());
-        parser = new QueryParser("content", new StandardAnalyzer());
+      parser = new QueryParser("content", new EnglishAnalyzer());
+//        parser = new QueryParser("content", new StandardAnalyzer());
         ArrayList<String> runFileStr = new ArrayList<String>();
         for (Map.Entry<String, String> entry:pageMap.entrySet()){
             String queryStr = entry.getValue();
@@ -210,13 +209,46 @@ public class QueryExpansion {
         list.addAll(hs);
         return list;
     }
+    public static CharArraySet getCustomStopWordSet(){
+        String stopWordDir = "/home/xl1044/ds/Query_Expansion/QueryExpaison/File/stop_word.cfg";
+
+        List<String> list = new ArrayList<>();
+
+        String line = "";
+
+        try{
+            //InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(stopWordDir);
+
+            //BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(stopWordDir));
+
+            while ((line = bufferedReader.readLine()) != null){
+                if (!line.isEmpty()){
+                    list.add(line.replace(" ",""));
+                }
+            }
+
+            bufferedReader.close();
+
+            CharArraySet stopWord = new CharArraySet(list,true);
+
+            return  stopWord;
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     private  List<String> analyzeByUnigram(String inputStr) throws IOException{
         List<String> strList = new ArrayList<>();
 
-        Analyzer analyzer =  new UnigramAnalyzer();
+        //Analyzer analyzer =  new UnigramAnalyzer();
+        Analyzer test = new EnglishAnalyzer(getCustomStopWordSet());
 
-        TokenStream tokenizer = analyzer.tokenStream("content", inputStr);
+
+
+        //TokenStream tokenizer = analyzer.tokenStream("content", inputStr);
+        TokenStream tokenizer = test.tokenStream("content", inputStr);
 
 
         CharTermAttribute charTermAttribute = tokenizer.addAttribute(CharTermAttribute.class);
