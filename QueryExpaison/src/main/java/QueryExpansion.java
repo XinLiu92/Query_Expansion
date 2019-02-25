@@ -305,13 +305,13 @@ public class QueryExpansion {
     private  List<String> analyzeByUnigram(String inputStr) throws IOException{
         List<String> strList = new ArrayList<>();
 
-        //Analyzer analyzer =  new UnigramAnalyzer();
-        Analyzer test = new EnglishAnalyzer(getCustomStopWordSet());
+        Analyzer analyzer =  new UnigramAnalyzer();
+        //Analyzer test = new EnglishAnalyzer(getCustomStopWordSet());
 
 
 
-        //TokenStream tokenizer = analyzer.tokenStream("content", inputStr);
-        TokenStream tokenizer = test.tokenStream("content", inputStr);
+        TokenStream tokenizer = analyzer.tokenStream("content", inputStr);
+        //TokenStream tokenizer = test.tokenStream("content", inputStr);
 
 
         CharTermAttribute charTermAttribute = tokenizer.addAttribute(CharTermAttribute.class);
