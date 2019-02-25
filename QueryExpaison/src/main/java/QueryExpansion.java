@@ -183,8 +183,8 @@ public class QueryExpansion {
 
 
         }
-        //Set<String> termSet = getTopValuesInMap(term_map, 5).keySet();
-        List<String> termSet = getTopValuesInMap(term_map);
+        Set<String> termSet = getTopValuesInMap(term_map, 5).keySet();
+        //List<String> termSet = getTopValuesInMap(term_map);
 
         expandedList.addAll(termSet);
 
