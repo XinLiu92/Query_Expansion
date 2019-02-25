@@ -213,15 +213,15 @@ public class QueryExpansion {
         List<String> res = new ArrayList<>();
 
 
-       // int count = 10;
+        int count = 100;
         for (int i = tmp.size()-1;i>=0;i--){
-//            if (count <= 0) break;
-//            else{
+            if (count <= 0) break;
+            else{
 
                 System.out.println(tmp.get(i));
                 res.add(tmp.get(i));
-//                count--;
-//            }
+                count--;
+            }
 
         }
 
