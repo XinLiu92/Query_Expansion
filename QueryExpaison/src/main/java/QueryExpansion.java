@@ -23,30 +23,41 @@ public class QueryExpansion {
 
     private IndexSearcher searcher;
     private Map<String,String> pageMap;
+    private Map<String,String> sectionMap;
     private String INDEX_DIR;
     private int max_result;
     private QueryParser parser;
     static final private String OUTPUT_DIR = "output";
-    public QueryExpansion(Map<String, String> pageMap, String indexPath){
+    public QueryExpansion(Map<String, String> pageMap,Map<String,String> sectionMap, String indexPath){
         this.pageMap = pageMap;
         this.INDEX_DIR = indexPath;
         this.max_result = 100;
+        this.sectionMap = sectionMap;
 
     }
 
 
 
-    public void run() throws IOException, ParseException {
+    public void runPage() throws IOException,ParseException{
+        run(pageMap,"page-QueryExpansion.run");
+
+    }
+
+
+    public void runSection() throws IOException,ParseException{
+        run(sectionMap,"section-QueryExpansion.run");
+    }
+    public void run(Map<String,String> map,String fileName) throws IOException, ParseException {
 
         System.out.println(INDEX_DIR);
         searcher = new IndexSearcher(DirectoryReader.open(FSDirectory.open((new File(INDEX_DIR).toPath()))));
 
         searcher.setSimilarity(new BM25Similarity());
 
-      parser = new QueryParser("content", new EnglishAnalyzer());
+        parser = new QueryParser("content", new EnglishAnalyzer());
 //        parser = new QueryParser("content", new StandardAnalyzer());
         ArrayList<String> runFileStr = new ArrayList<String>();
-        for (Map.Entry<String, String> entry:pageMap.entrySet()){
+        for (Map.Entry<String, String> entry:map.entrySet()){
             String queryStr = entry.getValue();
             String queryId = entry.getKey();
             Query q = parser.parse(QueryParser.escape(queryStr));
@@ -77,8 +88,8 @@ public class QueryExpansion {
 
             Query q_rm = generateWeightedQuery(queryStr,expandQueryList);
 
-             tops = searcher.search(q_rm, max_result);
-             ScoreDoc[] newScoreDoc = tops.scoreDocs;
+            tops = searcher.search(q_rm, max_result);
+            ScoreDoc[] newScoreDoc = tops.scoreDocs;
 
             for (int i = 0; i < newScoreDoc.length;i++ ){
                 ScoreDoc score = newScoreDoc[i];
@@ -96,7 +107,7 @@ public class QueryExpansion {
 
         }
 
-        writeToFile("page-QueryExpansion.run",runFileStr);
+        writeToFile(fileName,runFileStr);
 
     }
 
@@ -305,13 +316,13 @@ public class QueryExpansion {
     private  List<String> analyzeByUnigram(String inputStr) throws IOException{
         List<String> strList = new ArrayList<>();
 
-        Analyzer analyzer =  new UnigramAnalyzer();
-        //Analyzer test = new EnglishAnalyzer(getCustomStopWordSet());
+        //Analyzer analyzer =  new UnigramAnalyzer();
+        Analyzer test = new EnglishAnalyzer(getCustomStopWordSet());
 
 
 
-        TokenStream tokenizer = analyzer.tokenStream("content", inputStr);
-        //TokenStream tokenizer = test.tokenStream("content", inputStr);
+//        TokenStream tokenizer = analyzer.tokenStream("content", inputStr);
+        TokenStream tokenizer = test.tokenStream("content", inputStr);
 
 
         CharTermAttribute charTermAttribute = tokenizer.addAttribute(CharTermAttribute.class);

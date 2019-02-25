@@ -22,9 +22,10 @@ public class Main {
         Map<String,String> sectionMap = queryData.getAllSectionQueries();
 
         System.out.println("calling query expansion");
-        QueryExpansion qe = new QueryExpansion(pageMap,indexPath);
+        QueryExpansion qe = new QueryExpansion(pageMap,sectionMap,indexPath);
 
-        qe.run();
+        qe.runPage();
+        qe.runSection();
 
     }
 
