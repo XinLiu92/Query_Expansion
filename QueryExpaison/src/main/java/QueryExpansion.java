@@ -212,8 +212,15 @@ public class QueryExpansion {
 
         List<String> res = new ArrayList<>();
 
-        for (int i = tmp.size()-1;i>=tmp.size()-6;i--){
-            res.add(tmp.get(i));
+
+        int count = 10;
+        for (int i = tmp.size()-1;i>=0;i--){
+            if (count <= 0) break;
+            else{
+                res.add(tmp.get(i));
+                count--;
+            }
+
         }
 
         return res;
