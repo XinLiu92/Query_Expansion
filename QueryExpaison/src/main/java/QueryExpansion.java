@@ -307,7 +307,7 @@ public class QueryExpansion {
 
 
         CharTermAttribute charTermAttribute = tokenizer.addAttribute(CharTermAttribute.class);
-        //tokenizer.reset();
+        tokenizer.reset();
         while (tokenizer.incrementToken()) {
             String token = charTermAttribute.toString();
             strList.add(token);
