@@ -145,8 +145,8 @@ public class QueryExpansion {
 
             int rank = i+1;
 
-            //float initial_p = (float) 1 / (rank + 1);
-            float initial_p = 1;
+            float initial_p = (float) 1 / (rank + 1);
+            //float initial_p = 1;
 
 
             //first get rid of duplicated word, but no I think
