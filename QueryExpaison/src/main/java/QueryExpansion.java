@@ -152,33 +152,33 @@ public class QueryExpansion {
             //first get rid of duplicated word, but no I think
 
 
-//            for (String termStr : getVocabularyList(unigram_list)){
-//                //tf
-//                int tf_w = countExactStrFreqInList(termStr, unigram_list);
-//                int tf_list = unigram_list.size();
-//                float term_score = initial_p * ((float) tf_w / tf_list);
-//                if (term_map.keySet().contains(termStr)) {
-//                    term_map.put(termStr, term_map.get(termStr) + term_score);
-//
-//                } else {
-//                    term_map.put(termStr, term_score);
-//                }
-//            }
-
-            for (String termStr : unigram_list){
+            for (String termStr : getVocabularyList(unigram_list)){
                 //tf
                 int tf_w = countExactStrFreqInList(termStr, unigram_list);
-                //int tf_list = unigram_list.size();
-                int tf_list = scoreDocs.length;
+                int tf_list = unigram_list.size();
                 float term_score = initial_p * ((float) tf_w / tf_list);
                 if (term_map.keySet().contains(termStr)) {
-                    //term_map.put(termStr, term_map.get(termStr) + term_score);
-                    continue;
+                    term_map.put(termStr, term_map.get(termStr) + term_score);
 
                 } else {
                     term_map.put(termStr, term_score);
                 }
             }
+
+//            for (String termStr : unigram_list){
+//                //tf
+//                int tf_w = countExactStrFreqInList(termStr, unigram_list);
+//                //int tf_list = unigram_list.size();
+//                int tf_list = scoreDocs.length;
+//                float term_score = initial_p * ((float) tf_w / tf_list);
+//                if (term_map.keySet().contains(termStr)) {
+//                    //term_map.put(termStr, term_map.get(termStr) + term_score);
+//                    continue;
+//
+//                } else {
+//                    term_map.put(termStr, term_score);
+//                }
+//            }
 
 
 
