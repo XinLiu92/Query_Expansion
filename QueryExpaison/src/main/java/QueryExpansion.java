@@ -30,7 +30,7 @@ public class QueryExpansion {
     public QueryExpansion(Map<String, String> pageMap, String indexPath){
         this.pageMap = pageMap;
         this.INDEX_DIR = indexPath;
-        this.max_result = 10;
+        this.max_result = 100;
 
     }
 
