@@ -168,12 +168,11 @@ public class QueryExpansion {
             for (String termStr : unigram_list){
                 //tf
                 int tf_w = countExactStrFreqInList(termStr, unigram_list);
-                //int tf_list = unigram_list.size();
                 int tf_list = scoreDocs.length;
                 float term_score = initial_p * ((float) tf_w / tf_list);
                 if (term_map.keySet().contains(termStr)) {
-                    //term_map.put(termStr, term_map.get(termStr) + term_score);
-                    continue;
+                    term_map.put(termStr, term_map.get(termStr) + term_score);
+                    //continue;
 
                 } else {
                     term_map.put(termStr, term_score);
@@ -183,8 +182,8 @@ public class QueryExpansion {
 
 
         }
-//        Set<String> termSet = getTopValuesInMap(term_map, 8).keySet();
-        List<String> termSet = getTopValuesInMap(term_map);
+        Set<String> termSet = getTopValuesInMap(term_map, 5).keySet();
+        //List<String> termSet = getTopValuesInMap(term_map);
 
         expandedList.addAll(termSet);
 
