@@ -171,8 +171,8 @@ public class QueryExpansion {
                 int tf_list = scoreDocs.length;
                 float term_score = initial_p * ((float) tf_w / tf_list);
                 if (term_map.keySet().contains(termStr)) {
-                    term_map.put(termStr, term_map.get(termStr) + term_score);
-                    //continue;
+                    //term_map.put(termStr, term_map.get(termStr) + term_score);
+                    continue;
 
                 } else {
                     term_map.put(termStr, term_score);
