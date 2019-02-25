@@ -103,7 +103,7 @@ public class QueryExpansion {
     private Query generateWeightedQuery(String initialQ, List<String> rm_list) throws ParseException {
         if (!rm_list.isEmpty()) {
             String rm_str = String.join(" ", rm_list);
-            Query q = parser.parse(QueryParser.escape(initialQ) + "^1" + QueryParser.escape(rm_str) + "^0.75");
+            Query q = parser.parse(QueryParser.escape(initialQ) + "^1.5" + QueryParser.escape(rm_str) + "^0.75");
             return q;
         } else {
             Query q = parser.parse(QueryParser.escape(initialQ));
@@ -213,13 +213,13 @@ public class QueryExpansion {
         List<String> res = new ArrayList<>();
 
 
-        int count = 10;
+       // int count = 10;
         for (int i = tmp.size()-1;i>=0;i--){
-            if (count <= 0) break;
-            else{
+//            if (count <= 0) break;
+//            else{
                 res.add(tmp.get(i));
-                count--;
-            }
+//                count--;
+//            }
 
         }
 
