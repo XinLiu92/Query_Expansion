@@ -139,18 +139,41 @@ public class QueryExpansion {
 
             float rankScore = score.score;
 
+
+            //document term vector
             List<String> unigram_list = analyzeByUnigram(paraBody);
 
             int rank = i+1;
 
-            //float initial_p = (float) 1 / (rank + 1); // p always < 1
+            //float initial_p = (float) 1 / (rank + 1);
             float initial_p = 1;
-            for (String termStr : getVocabularyList(unigram_list)){
+
+
+            //first get rid of duplicated word, but no I think
+
+
+//            for (String termStr : getVocabularyList(unigram_list)){
+//                //tf
+//                int tf_w = countExactStrFreqInList(termStr, unigram_list);
+//                int tf_list = unigram_list.size();
+//                float term_score = initial_p * ((float) tf_w / tf_list);
+//                if (term_map.keySet().contains(termStr)) {
+//                    term_map.put(termStr, term_map.get(termStr) + term_score);
+//
+//                } else {
+//                    term_map.put(termStr, term_score);
+//                }
+//            }
+
+            for (String termStr : unigram_list){
+                //tf
                 int tf_w = countExactStrFreqInList(termStr, unigram_list);
-                int tf_list = unigram_list.size();
+                //int tf_list = unigram_list.size();
+                int tf_list = scoreDocs.length;
                 float term_score = initial_p * ((float) tf_w / tf_list);
                 if (term_map.keySet().contains(termStr)) {
-                    term_map.put(termStr, term_map.get(termStr) + term_score);
+                    //term_map.put(termStr, term_map.get(termStr) + term_score);
+                    continue;
 
                 } else {
                     term_map.put(termStr, term_score);
@@ -160,12 +183,44 @@ public class QueryExpansion {
 
 
         }
-        Set<String> termSet = getTopValuesInMap(term_map, 5).keySet();
-
+        //Set<String> termSet = getTopValuesInMap(term_map, 5).keySet();
+        List<String> termSet = getTopValuesInMap(term_map);
 
         expandedList.addAll(termSet);
 
         return expandedList;
+    }
+
+
+    public static List<String> getTopValuesInMap(Map<String, Float> map){
+        //defualt get top 10;
+
+        List<String> tmp = new ArrayList<>();
+        Map<Float,String> treemap = new TreeMap<>();
+
+        for(Map.Entry<String, Float> entry:map.entrySet()){
+            String key = entry.getKey();
+            float value = entry.getValue();
+            treemap.put(value,key);
+        }
+
+        for(Map.Entry<Float, String> entry:treemap.entrySet()){
+            String value = entry.getValue();
+            float key = entry.getKey();
+            tmp.add(value);
+        }
+
+        List<String> res = new ArrayList<>();
+
+        for (int i = tmp.size()-1;i>=tmp.size()-6;i--){
+            res.add(tmp.get(i));
+        }
+
+        return res;
+
+
+
+
     }
 
 
@@ -252,7 +307,7 @@ public class QueryExpansion {
 
 
         CharTermAttribute charTermAttribute = tokenizer.addAttribute(CharTermAttribute.class);
-        tokenizer.reset();
+        //tokenizer.reset();
         while (tokenizer.incrementToken()) {
             String token = charTermAttribute.toString();
             strList.add(token);
