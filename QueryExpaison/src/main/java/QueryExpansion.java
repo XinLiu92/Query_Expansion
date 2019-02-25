@@ -143,8 +143,8 @@ public class QueryExpansion {
 
             int rank = i+1;
 
-            float initial_p = (float) 1 / (rank + 1); // p always < 1
-
+            //float initial_p = (float) 1 / (rank + 1); // p always < 1
+            float initial_p = 1;
             for (String termStr : getVocabularyList(unigram_list)){
                 int tf_w = countExactStrFreqInList(termStr, unigram_list);
                 int tf_list = unigram_list.size();
