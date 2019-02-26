@@ -4,7 +4,6 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
@@ -49,13 +48,11 @@ public class QueryExpansion {
     }
     public void run(Map<String,String> map,String fileName) throws IOException, ParseException {
 
-        System.out.println(INDEX_DIR);
         searcher = new IndexSearcher(DirectoryReader.open(FSDirectory.open((new File(INDEX_DIR).toPath()))));
 
         searcher.setSimilarity(new BM25Similarity());
 
         parser = new QueryParser("content", new EnglishAnalyzer());
-//        parser = new QueryParser("content", new StandardAnalyzer());
         ArrayList<String> runFileStr = new ArrayList<String>();
         for (Map.Entry<String, String> entry:map.entrySet()){
             String queryStr = entry.getValue();
@@ -64,29 +61,10 @@ public class QueryExpansion {
             TopDocs tops = searcher.search(q, max_result);
             ScoreDoc[] scoreDoc = tops.scoreDocs;
 
-            //Query newQuery = expandQueryByRocchio(queryStr,scoreDoc);
             List<String> expandQueryList = expandQueryByRocchio(5,scoreDoc);
-//            tops = searcher.search(newQuery,max_result);
-//
-//
-//            scoreDoc = tops.scoreDocs;
-//            for (int i = 0; i < scoreDoc.length; i++) {
-//                ScoreDoc score = scoreDoc[i];
-//                Document doc = searcher.doc(score.doc);
-//                String paraId = doc.getField("paraid").stringValue();
-//                float rankScore = score.score;
-//                int rank = i + 1;
-//
-//                // String runStr = "enwiki:" + queryStr.replace(" ", "%20") + " Q0 " + paraId + " " + rank + " "+ rankScore + " BM25";
-//
-//                String runStr = queryId+" Q0 "+paraId+" "+rank+ " "+rankScore+" "+"team3"+" QueryExpansion";
-//                System.out.println(runStr);
-//                runFileStr.add(runStr);
-//            }
 
 
-
-            Query q_rm = generateWeightedQuery(queryStr,expandQueryList);
+            Query q_rm = setBoost(queryStr,expandQueryList);
 
             tops = searcher.search(q_rm, max_result);
             ScoreDoc[] newScoreDoc = tops.scoreDocs;
@@ -111,18 +89,18 @@ public class QueryExpansion {
 
     }
 
-    private Query generateWeightedQuery(String initialQ, List<String> rm_list) throws ParseException {
-        if (!rm_list.isEmpty()) {
-            String rm_str = String.join(" ", rm_list);
-            Query q = parser.parse(QueryParser.escape(initialQ) + "^1.5" + QueryParser.escape(rm_str) + "^0.75");
+    private Query setBoost(String originalQuery, List<String> expanded_list) throws ParseException {
+        if (!expanded_list.isEmpty()) {
+            String rm_str = String.join(" ", expanded_list);
+            Query q = parser.parse(QueryParser.escape(originalQuery) + "^1.5" + QueryParser.escape(rm_str) + "^0.75");
             return q;
         } else {
-            Query q = parser.parse(QueryParser.escape(initialQ));
+            Query q = parser.parse(QueryParser.escape(originalQuery));
             return q;
         }
     }
 
-    private static void writeToFile(String filename, ArrayList<String> runfileStrings) {
+    private void writeToFile(String filename, ArrayList<String> runfileStrings) {
         String fullpath = OUTPUT_DIR + "/" + filename;
 
         try (FileWriter runfile = new FileWriter(new File(fullpath))) {
@@ -144,11 +122,7 @@ public class QueryExpansion {
         for (int i = 0; i < scoreDocs.length;i++){
             ScoreDoc score = scoreDocs[i];
             Document doc = searcher.doc(score.doc);
-            String paraID = doc.getField("paraid").toString();
             String paraBody = doc.getField("content").toString();
-
-
-            float rankScore = score.score;
 
 
             //document term vector
@@ -156,31 +130,14 @@ public class QueryExpansion {
 
             int rank = i+1;
 
-            float initial_p = (float) 1 / (rank + 1);
-            //float initial_p = 1;
+            float p = (float) 1 / (rank + 1);
 
-
-            //first get rid of duplicated word, but no I think
-
-
-//            for (String termStr : getVocabularyList(unigram_list)){
-//                //tf
-//                int tf_w = countExactStrFreqInList(termStr, unigram_list);
-//                int tf_list = unigram_list.size();
-//                float term_score = initial_p * ((float) tf_w / tf_list);
-//                if (term_map.keySet().contains(termStr)) {
-//                    term_map.put(termStr, term_map.get(termStr) + term_score);
-//
-//                } else {
-//                    term_map.put(termStr, term_score);
-//                }
-//            }
 
             for (String termStr : unigram_list){
                 //tf
-                int tf_w = countExactStrFreqInList(termStr, unigram_list);
+                int tf_w = getFreq(termStr, unigram_list);
                 int tf_list = scoreDocs.length;
-                float term_score = initial_p * ((float) tf_w / tf_list);
+                float term_score = p * ((float) tf_w / tf_list);
                 if (term_map.keySet().contains(termStr)) {
                     //term_map.put(termStr, term_map.get(termStr) + term_score);
                     continue;
@@ -193,57 +150,14 @@ public class QueryExpansion {
 
 
         }
-        Set<String> termSet = getTopValuesInMap(term_map, 5).keySet();
-        //List<String> termSet = getTopValuesInMap(term_map);
+        Set<String> termSet = getTop(term_map, 5);
 
         expandedList.addAll(termSet);
 
         return expandedList;
     }
 
-
-    public static List<String> getTopValuesInMap(Map<String, Float> map){
-        //defualt get top 10;
-
-        List<String> tmp = new ArrayList<>();
-        Map<Float,String> treemap = new TreeMap<>();
-
-        for(Map.Entry<String, Float> entry:map.entrySet()){
-            String key = entry.getKey();
-            float value = entry.getValue();
-            treemap.put(value,key);
-        }
-
-        for(Map.Entry<Float, String> entry:treemap.entrySet()){
-            String value = entry.getValue();
-            float key = entry.getKey();
-            tmp.add(value);
-        }
-
-        List<String> res = new ArrayList<>();
-
-
-        int count = 5;
-        for (int i = tmp.size()-1;i>=0;i--){
-            if (count <= 0) break;
-            else{
-
-                System.out.println(tmp.get(i));
-                res.add(tmp.get(i));
-                count--;
-            }
-
-        }
-
-        return res;
-
-
-
-
-    }
-
-
-    public static HashMap<String, Float> getTopValuesInMap(Map<String, Float> unsortMap, int k) {
+    public static Set<String> getTop(Map<String, Float> unsortMap, int k) {
         List<Map.Entry<String, Float>> list = new LinkedList<Map.Entry<String, Float>>(unsortMap.entrySet());
 
         Collections.sort(list, new Comparator<Map.Entry<String, Float>>() {
@@ -253,47 +167,37 @@ public class QueryExpansion {
             }
         });
 
-        HashMap<String, Float> sortedMap = new LinkedHashMap<String, Float>();
+        Map<String, Float> Map = new LinkedHashMap<>();
+
         int i = 0;
         for (Map.Entry<String, Float> entry : list)
 
         {
             if (i < k || k == 0) {
-                sortedMap.put(entry.getKey(), entry.getValue());
+                Map.put(entry.getKey(), entry.getValue());
                 i++;
             } else {
                 break;
             }
         }
 
-        return sortedMap;
+        return Map.keySet();
     }
 
 
-    private static int countExactStrFreqInList(String term, List<String> list) {
-        int occurrences = Collections.frequency(list, term);
-        return occurrences;
+    private int getFreq(String term, List<String> list) {
+        int frequency = Collections.frequency(list, term);
+        return frequency;
     }
 
-    private static List<String> getVocabularyList(List<String> unigramList) {
-        List<String> list = new ArrayList<String>();
-        Set<String> hs = new HashSet<>();
-
-        hs.addAll(unigramList);
-        list.addAll(hs);
-        return list;
-    }
-    public static CharArraySet getCustomStopWordSet(){
-        String stopWordDir = "/home/xl1044/ds/Query_Expansion/QueryExpaison/File/stop_word.cfg";
-
+    public CharArraySet getStopWordSet(){
+        //String stopWordDir = "/home/xl1044/ds/Query_Expansion/QueryExpaison/File/stop_word.cfg";
+        String stopWordDir = "../../../File/stop_word.cfg";
         List<String> list = new ArrayList<>();
 
         String line = "";
 
         try{
-            //InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(stopWordDir);
-
-            //BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
             BufferedReader bufferedReader = new BufferedReader(new FileReader(stopWordDir));
 
             while ((line = bufferedReader.readLine()) != null){
@@ -316,14 +220,9 @@ public class QueryExpansion {
     private  List<String> analyzeByUnigram(String inputStr) throws IOException{
         List<String> strList = new ArrayList<>();
 
-        //Analyzer analyzer =  new UnigramAnalyzer();
-        Analyzer test = new EnglishAnalyzer(getCustomStopWordSet());
+        Analyzer test = new EnglishAnalyzer(getStopWordSet());
 
-
-
-//        TokenStream tokenizer = analyzer.tokenStream("content", inputStr);
         TokenStream tokenizer = test.tokenStream("content", inputStr);
-
 
         CharTermAttribute charTermAttribute = tokenizer.addAttribute(CharTermAttribute.class);
         tokenizer.reset();
