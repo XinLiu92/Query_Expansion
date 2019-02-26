@@ -126,7 +126,7 @@ public class QueryExpansion {
 
 
             //document term vector
-            List<String> unigram_list = analyzeByUnigram(paraBody);
+            List<String> unigram_list = analyze(paraBody);
 
             int rank = i+1;
 
@@ -218,7 +218,7 @@ public class QueryExpansion {
         }
     }
 
-    private  List<String> analyzeByUnigram(String inputStr) throws IOException{
+    private  List<String> analyze(String inputStr) throws IOException{
         List<String> strList = new ArrayList<>();
 
         Analyzer test = new EnglishAnalyzer(getStopWordSet());
