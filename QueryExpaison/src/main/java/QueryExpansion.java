@@ -192,7 +192,8 @@ public class QueryExpansion {
 
     public CharArraySet getStopWordSet(){
         //String stopWordDir = "/home/xl1044/ds/Query_Expansion/QueryExpaison/File/stop_word.cfg";
-        String stopWordDir = "./resources/stop_word.cfg";
+        String stopWordDir = QueryExpansion.class.getClassLoader().getResource("stop_word.cfg").getPath();
+
         List<String> list = new ArrayList<>();
 
         String line = "";
